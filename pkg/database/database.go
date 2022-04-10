@@ -2,9 +2,9 @@ package database
 
 import (
 	"time"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"fmt"
 )
 
 type Bill struct {
@@ -56,14 +56,54 @@ type Budget struct {
 	Name          string  `gorm:"column:name;size:128;not null;"`
 }
 
-func database_create() {
+type Migrator interface {
+	// AutoMigrate
+	AutoMigrate(dst ...interface{}) error
+  
+	// Database
+	CurrentDatabase() string
+  
+	// Tables
+	CreateTable(dst ...interface{}) error
+	DropTable(dst ...interface{}) error
+	HasTable(dst interface{}) bool
+	RenameTable(oldName, newName interface{}) error
+  
+	// Columns
+	AddColumn(dst interface{}, field string) error
+	DropColumn(dst interface{}, field string) error
+	AlterColumn(dst interface{}, field string) error
+	HasColumn(dst interface{}, field string) bool
+	RenameColumn(dst interface{}, oldName, field string) error
+  
+	// Constraints
+	CreateConstraint(dst interface{}, name string) error
+	DropConstraint(dst interface{}, name string) error
+	HasConstraint(dst interface{}, name string) bool
+  
+	// Indexes
+	CreateIndex(dst interface{}, name string) error
+	DropIndex(dst interface{}, name string) error
+	HasIndex(dst interface{}, name string) bool
+	RenameIndex(dst interface{}, oldName, newName string) error
+  }
+
+func Database_connect() *gorm.DB {
 	dsn := "host=localhost user=postgres password=A1qwerty! dbname=budgeter port=5432"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		panic("Could not connect to database")
 	}
+	return db
 
-	db.AutoMigrate(&Bill{}, NatashaExpense{}, &JustinExpense{}, &FuelExpense{}, &HygeineExpense{}, &Groceries{}, &Savings{}, &Budget{})
+}
 
+func Database_create() {
+	if Database_connect().Migrator().HasTable(&Bill{}) == false {
+		Database_connect().AutoMigrate(&Bill{}, &NatashaExpense{}, &JustinExpense{}, &FuelExpense{}, &HygeineExpense{}, &Groceries{}, &Savings{}, &Budget{})
+		fmt.Printf("Creating Database")
+	} else {
+		fmt.Printf("Database already exists")
+	}
 }

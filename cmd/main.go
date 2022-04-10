@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/jmorave/budgeter/pkg/api"
-	"github.com/jmorave/databse"
+	"github.com/jmorave/budgeter/pkg/database"
 )
 
 func main() {
-	database_create()
-	handleRequests()
+	database.Database_create()
 }
